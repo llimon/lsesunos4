@@ -1,9 +1,7 @@
 #!/bin/sh
 
-app=vim
-release=6.4
-## the tar file has a non standard folder name
-custom_src_folder="vim64"
+app=grep
+release=2.4.2
 
 . /home/luis/source/build.functions.sh
 
@@ -12,20 +10,20 @@ prep() {
 }
 
 clean() {
-   generic_clean
+    generic_clean
 }
 
 build() {
-    custom_src_folder="vim64"
-    generic_build src
+    generic_build
 }
 
 install() {
- generic_install src
+    clean_stage
+    generic_install
 }
 
 pack() {
-   generic_pack 
+   generic_pack
 }
 
 # Route to a function (quoted to protect empty arguments)

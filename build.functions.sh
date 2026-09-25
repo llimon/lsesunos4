@@ -26,6 +26,11 @@ fi
 export CPPFLAGS="-I/usr/local/lse/include"
 export LDFLAGS="-L/usr/local/lse/lib"
 
+src_folder="${app}-${release}"
+if [[ -n "${custom_src_folder}" ]]; then
+   src_folder="${custom_src_folder}"
+fi
+
 clean_stage() {
         saved_dir=`pwd`
         
@@ -38,21 +43,21 @@ clean_stage() {
 }
 
 generic_clean(){
-	rm -r -f "${builddir}/${app}-${release}" || exit 1
+	rm -r -f "${builddir}/${src_folder}" || exit 1
 }
 
 generic_prep(){
 
         mkdir -p "${builddir}"
-
-        if [ -d "{builddir}/${app}-${release}" ]; then
+        if [ -d "${builddir}/${src_folder}" ]; then
                 echo "Removing previous build..."
                 generic_clean
         fi
+        cd  "${builddir}" || exit 1
         gzip -d -c "${srcfiles}/${app}-${release}.tar.gz" | tar -xvf -
 
         # Enter directory before applying patches
-        cd "${builddir}/${app}-${release}" || exit 1
+        cd "${builddir}/${src_folder}" || exit 1
 
         # Apply patches if defined
         if [ -n "$(declare -p patches 2>/dev/null | grep 'declare -a')" ] && [ ${#patches[@]} -gt 0 ]; then
@@ -82,7 +87,7 @@ generic_prep(){
 generic_build(){
     local sub_dir="${1:-.}"
 
-    cd "${builddir}/${app}-${release}/${sub_dir}" || exit 1
+    cd "${builddir}/${src_folder}/${sub_dir}" || exit 1
 
     ./configure --prefix="${prefix}"
 
@@ -97,23 +102,11 @@ generic_install(){
     echo "creating ${stagedir}${prefix}"
     mkdir -p ${stagedir}${prefix}
 
-    cd "${builddir}/${app}-${release}/${sub_dir}" || exit 1
+    cd "${builddir}/${src_folder}/${sub_dir}" || exit 1
 
 
     # Install into the temporary staging area using the locally built binary
     make install prefix="${stagedir}${prefix}" 
-}
-
-OLD_generic_pack(){
-    local sub_dir="${1:-.}"
-
-    mkdir -p "${distdir}"
-    ls -al "${stagedir}${prefix}/${sub_dir}"
-    (cd "${stagedir}${prefix}/${sub_dir}" && echo "running tar" && tar -cvf "${distdir}/${app}-${release}-${osversion}.tar" ./*)
-    pwd
-    gzip -f "${distdir}/${app}-${release}-${osversion}.tar"
-    sleep 1
-    ls -al "${distdir}/${app}-${release}-${osversion}.tar.gz"
 }
 
 generic_pack(){
@@ -141,18 +134,6 @@ generic_pack(){
 }
 
 
-#move_to_stage() {
-#    saved_dir=`pwd`
-#    cd "${stagedir}${prefix}" || exit 1
-#    mv ${prefix}/bin .
-#    mv ${prefix}/include .
-#    mv ${prefix}/info .
-#    mv ${prefix}/lib .
-#    mv ${prefix}/man .
-#    mv ${prefix}/sparc-sun-sunos4.1.3_U1 .
-#    cd "${saved_dir}"
-#}
-	
 param_router() {
  if [ -z "$1" ]; then
     echo "Error: syntax $0 <param> : build, install, clean, pack"
