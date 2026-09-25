@@ -1,7 +1,8 @@
 #!/bin/sh
 
-app=Python
-release=1.5.2
+app=flex
+release=2.5.4a
+custom_src_folder=${app}-"2.5.4"
 
 . /home/luis/source/build.functions.sh
 
@@ -14,13 +15,7 @@ clean() {
 }
 
 build() {
-    #export LDFLAGS="-L/usr/local/lse/lib -llsesunoscompat"
-    export LDFLAGS="-L/usr/local/lse/lib"
-    cd ${builddir}/${app}-${release} || exit 1
-    ./configure
-
-    #make CPPFLAGS="-O2 -include /usr/local/lse/include/lse/sunos_compat.h"
-    make 
+    generic_build
 }
 
 install() {

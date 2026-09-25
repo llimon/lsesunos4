@@ -1,11 +1,14 @@
-# SunOS 4.1.x (BSD)b 
+# Legasy SPARC Extensions for SunOS 4
 
-Is a group of cohesive Open Source and GNU utilityes for SunOS 4.1.X / Solaris 1.1.x
+LSE Is a group of cohesive Open Source and GNU software for SunOS 4.1.X / Solaris 1.1.x
 
-Installation: Pour the tar files in */usr/local*, They were compiled under the prefix /usr/local/lse. 
-It is possible to move them to /opt or directly to /usr. Just update your patch and LD_LIBRARY_PATH. 
+## Installation
+Pour the tar files in */usr/local*, They were compiled with prefix /usr/local/lse. 
+It is possible to move them to /opt or /usr. Just update your PATH and LD_LIBRARY_PATH. 
 
-For GCC one has to additionaly update this variables to run it in a different location from /usr/local/lse:
+GCC in any location other than /usr/local/lse needs additional export variables to locate it's files.
+
+All binaries were compiled In a 40Mhz SPARCstation 10 using the LSE build system.
 
 ```bash
 # Add the GCC internal include path to the front
@@ -27,7 +30,7 @@ export C_INCLUDE_PATH
 | **GCC** | `2.8.1` | `/usr/local/lse/bin/gcc` | **Completed.** Legacy C compiler stage. |
 | **GNU Make** | `3.79.1` | `/usr/local/lse/bin/make` | **Completed.** Primary build automation engine. |
 | **GNU Bison** | `1.29` | `/usr/local/lse/bin/bison` | **Completed.** LALR(1) parser generator. |
-| **flex** | `2.5.4a` | `/usr/local/lse/bin/flex` | **Target.** Lexical analyzer generator (pairs with Bison). |
+| **flex** | `2.5.4a` | `/usr/local/lse/bin/flex` | **Completed.** Lexical analyzer generator (pairs with Bison). |
 
 ---
 
@@ -49,8 +52,8 @@ export C_INCLUDE_PATH
 | Package | Version | Binary / Library Output | Status / Role |
 | :--- | :--- | :--- | :--- |
 | **Perl** | `5.6.2` | `/usr/local/lse/bin/perl` | **Completed.** Full Perl 5 interpreter with standard modules. |
-| **Python** | `1.5.2` | `/usr/local/lse/bin/python1.5` | **Target (Preferred).** Pre-POSIX Python engine; builds cleanly on SunOS 4. |
-| **Python** | `2.0.1` | `/usr/local/lse/bin/python2.0` | **Target (Alternative).** Early 2.x option if Unicode/GC features are needed. |
+| **Python** | `1.5.2` | `/usr/local/lse/bin/python1.5` | **Target (Preferred).** Pre-POSIX Python engine. |
+| **Python** | `2.0.1` | `/usr/local/lse/bin/python2.0` | **Target (Alternative).** Early 2.x option. |
 
 ---
 
@@ -59,7 +62,7 @@ export C_INCLUDE_PATH
 | Package | Version | Binary / Library Output | Status / Role |
 | :--- | :--- | :--- | :--- |
 | **Midnight Commander** | `4.1.40` | `/usr/local/lse/bin/mc` | **Completed.** Built with S-Lang/curses and `liblsecompat`. |
-| **Vim** | `4.5` | `/usr/local/lse/bin/vim` | **Completed.** Terminal text editor. |
+| **Vim** | `6.4` | `/usr/local/lse/bin/vim` | **Completed.** Terminal text editor. |
 | **GNU Screen** | `3.9.4` | `/usr/local/lse/bin/screen` | **Completed.** Terminal multiplexer. |
 | **ncurses / S-Lang** | `5.2` / `1.4.x` | `libncurses.a`, `libslang.a` | **Completed.** Terminal handling libraries. |
 | **less** | `381` | `/usr/local/lse/bin/less` | **Target.** Enhanced file pager replacing SunOS `more`. |
