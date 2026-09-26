@@ -1,7 +1,7 @@
 #!/bin/sh
 
-app=grep
-release=2.5.4
+app=ncurses
+release=5.4
 
 . /home/luis/source/build.functions.sh
 
@@ -14,12 +14,7 @@ clean() {
 }
 
 build() {
-#    generic_build
-     cd "${builddir}/${app}-${release}"
-     ./configure --prefix=/usr/local \
-            --disable-nls \
-            --disable-perl-regexp
-     make
+    generic_build
 }
 
 install() {

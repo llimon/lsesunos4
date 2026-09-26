@@ -1,7 +1,7 @@
 #!/bin/sh
 
-app=grep
-release=2.5.4
+app=top
+release=3.5.1
 
 . /home/luis/source/build.functions.sh
 
@@ -14,12 +14,10 @@ clean() {
 }
 
 build() {
-#    generic_build
-     cd "${builddir}/${app}-${release}"
-     ./configure --prefix=/usr/local \
-            --disable-nls \
-            --disable-perl-regexp
-     make
+    #generic_build
+    cd "${builddir}/${app}-${release}" || exit 1
+    ./Configure sunos4
+    make LIBS="-L$prefix/lib -llsecompat -lkvm"
 }
 
 install() {

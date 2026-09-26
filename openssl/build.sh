@@ -1,7 +1,7 @@
 #!/bin/sh
 
 app=openssl
-release=0.9.6m
+release=0.9.8zh
 
 . /home/luis/source/build.functions.sh
 
@@ -17,7 +17,7 @@ build() {
     # Set GCC explicitly
     #export CFLAGS="$CFLAGS "
     #export LDFLAGS="-L${PREFIX}/lib -llsecompat"
-    cd ${app}-${release} || exit 1
+    cd ${builddir}/${app}-${release} || exit 1
     ./Configure sunos-gcc \
        --prefix="${prefix}" \
        -Dssize_t=int
@@ -30,7 +30,7 @@ install() {
     echo "creating ${stagedir}${prefix}"
     mkdir -p "${stagedir}${prefix}"
 
-    cd "${app}-${release}/${sub_dir}" || exit 1
+    cd "${builddir}/${app}-${release}/${sub_dir}" || exit 1
 
     # OpenSSL 0.9.6 uses INSTALL_PREFIX as the staging directory (DESTDIR equivalent)
     # and INSTALLTOP for the prefix directory path.
