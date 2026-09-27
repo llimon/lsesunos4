@@ -9,7 +9,6 @@
 #  if defined(__ELF__) || defined(__solaris__) || defined(SOLARIS2)
      /* ELF systems: Use pragma weak */
 #    pragma weak memmove
-#    pragma weak strerror
 #    pragma weak difftime
 #    pragma weak atexit
 #    pragma weak strsep
@@ -18,7 +17,6 @@
 #  elif defined(__aout__) || defined(sun) || defined(__sunos__)
      /* SunOS 4 / a.out systems: Standard declarations without weak attributes */
      void          *memmove(void *dest, const void *src, size_t n);
-     char          *strerror(int errnum);
      double         difftime(time_t time1, time_t time0);
      int            atexit(void (*func)(void));
      char          *strsep(char **stringp, const char *delim);
@@ -27,7 +25,6 @@
 #  else
      /* Fallback for other GCC platforms supporting weak attributes */
      void          *memmove(void *dest, const void *src, size_t n)     __attribute__((weak));
-     char          *strerror(int errnum)                              __attribute__((weak));
      double         difftime(time_t time1, time_t time0)              __attribute__((weak));
      int            atexit(void (*func)(void))                         __attribute__((weak));
      char          *strsep(char **stringp, const char *delim)         __attribute__((weak));
@@ -39,16 +36,6 @@
 void *memmove(void *dest, const void *src, size_t n) {
     bcopy(src, dest, n);
     return dest;
-}
-
-/* strerror shim for SunOS 4 */
-extern char *sys_errlist[];
-extern int sys_nerr;
-
-char *strerror(int errnum) {
-    if (errnum >= 0 && errnum < sys_nerr)
-        return sys_errlist[errnum];
-    return "Unknown error";
 }
 
 /* difftime shim for SunOS 4 */
