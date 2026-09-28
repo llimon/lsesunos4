@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <ctype.h>
 #include <locale.h>
+#include <stdio.h>
+#include <errno.h>
 
 #if defined(__GNUC__)
 #  if defined(__ELF__) || defined(__solaris__) || defined(SOLARIS2)
@@ -15,6 +17,7 @@
 #    pragma weak strtoul
 #    pragma weak strtol
 #    pragma weak setlocale
+#    pragma weak strerror
 #  elif defined(__aout__) || defined(sun) || defined(__sunos__)
      /* SunOS 4 / a.out systems: Standard declarations without weak attributes */
      void          *memmove(void *dest, const void *src, size_t n);
@@ -23,6 +26,7 @@
      char          *strsep(char **stringp, const char *delim);
      long          strtol(const char *nptr, char **endptr, int base);
      unsigned long  strtoul(const char *nptr, char **endptr, int base);
+     char          *strerror(int errnum);
      char          *setlocale(int category, const char *locale);
 #  else
      /* Fallback for other GCC platforms supporting weak attributes */
@@ -32,12 +36,20 @@
      char          *strsep(char **stringp, const char *delim)         __attribute__((weak));
      long           strtol(const char *nptr, char **endptr, int base) __attribute__((weak));
      unsigned long  strtoul(const char *nptr, char **endptr, int base) __attribute__((weak));
+     char          *strerror(int errnum)                               __attribute__((weak));
      char          *setlocale(int category, const char *locale)        __attribute__((weak));
 #  endif
 #endif
 
+/* SunOS 4 libc global error string definitions */
+extern int sys_nerr;
+extern char *sys_errlist[];
+extern void *memmove(void *dest, const void *src, size_t n);
+
 void *memmove(void *dest, const void *src, size_t n) {
-    bcopy(src, dest, n);
+    if (dest != src && n > 0) {
+        bcopy(src, dest, n);
+    }
     return dest;
 }
 
@@ -132,9 +144,21 @@ long strtol(const char *nptr, char **endptr, int base)
     return acc;
 }
 
+
 unsigned long strtoul(const char *nptr, char **endptr, int base)
 {
     return (unsigned long)strtol(nptr, endptr, base);
+}
+
+char *strerror(int errnum) {
+    static char unknown_buf[32];
+
+    if (errnum >= 0 && errnum < sys_nerr) {
+        return sys_errlist[errnum];
+    }
+
+    sprintf(unknown_buf, "Unknown error %d", errnum);
+    return unknown_buf;
 }
 
 /* setlocale dummy shim for SunOS 4 */

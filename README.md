@@ -78,7 +78,7 @@ export C_INCLUDE_PATH
 | **GNU Patch** | `2.5` | `/usr/local/lse/bin/patch` | **Completed.** Source code patching tool. |
 | **GNU sh-utils** | `2.0` | `echo`, `env`, `uname`, `who` | **Completed.** Core shell utilities. |
 | **GNU findutils** | `4.1` | `find`, `xargs` | **Completed.** Directory searching utilities. |
-| **GNU sed** | `3.02` | `/usr/local/lse/bin/sed` | **Target.** Stream editor with larger buffer limits than native `sed`. |
+| **GNU sed** | `3.02+-i` | `/usr/local/lse/bin/sed` | **Completed.** Stream editor with larger buffer limits than native `sed`. We backported inpleace editing (-i)  |
 | **GNU gawk** | `3.0.6` | `/usr/local/lse/bin/gawk` | **Target.** POSIX `awk` replacing original SunOS `oawk`. |
 | **GNU grep** | `5.4.1| `/usr/local/lse/bin/grep` | **Completed.** | Support for -R recursive |
 | **GNU diffutils** | `2.7` | `diff`, `cmp`, `sdiff` | **Target.** Context/unified diff generation tool. |
