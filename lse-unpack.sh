@@ -1,6 +1,10 @@
 #!/bin/sh
 # Usage: ./lse-unpack.sh /path/to/tar/folder [target_dir]
 
+# 1. Force PATH to look in /usr/local/lse/bin first
+PATH=/usr/local/lse/bin:$PATH
+export PATH
+
 # Source directory containing archive files
 SRC_DIR="$1"
 
@@ -9,7 +13,10 @@ TARGET_DIR="${2:-/usr/local/lse}"
 
 if [ -z "${SRC_DIR}" ]; then
     echo "Usage: $0 <source_folder> [target_folder]"
-    echo "Example: $0 /usr/local/home/luis/archive /usr/local/lse/src"
+    echo "Example: $0 /usr/local/home/user/downloads /usr/local/lse"
+    echo 
+    echo "Make sure in the source_folder you only have lse archives,"
+    echo "everything tar.gz,tar.Z will be un-packed."
     exit 1
 fi
 
@@ -31,11 +38,30 @@ echo "=================================================="
 
 cd "${SRC_DIR}" || exit 1
 
+# 2. Phase 1: Unpack gzip-*.tar first so GNU gzip lands in /usr/local/lse/bin
+for gz_bootstrap in gzip-*.tar; do
+    if [ -f "${gz_bootstrap}" ]; then
+        echo "--> [Bootstrap Phase] Extracting raw gzip tar: ${gz_bootstrap}"
+        (cd "${TARGET_DIR}" && tar xvf "${SRC_DIR}/${gz_bootstrap}")
+    fi
+done
+
+# Ensure PATH hash is cleared so the shell finds the newly installed gzip
+hash -r 2>/dev/null || rehash 2>/dev/null
+
+# 3. Phase 2: Unpack all remaining archive files
 for file in *; do
     # Skip if no matching files in directory
     if [ ! -f "${file}" ]; then
         continue
     fi
+
+    # Skip gzip-*.tar since it was extracted in Phase 1
+    case "${file}" in
+        gzip-*.tar)
+            continue
+            ;;
+    esac
 
     case "${file}" in
         *.tar.gz|*.tgz)

@@ -15,6 +15,10 @@ OS_TYPE=`uname -s`
 CFLAGS="-O2 -mcpu=v7 -I."
 LDFLAGS="-lgcc_s"
 
+# Preprocessor defines required specifically for snprintf_compat.c
+#SNPRINTF_DEFS="-DSNPRINTF_LONGLONG_SUPPORT -DSOLARIS_COMPATIBLE -DSOLARIS_BUG_COMPATIBLE"
+SNPRINTF_DEFS=""
+
 # Configure explicit source arrays and library names based on target
 if [ "$TARGET" = "-build-lsecompat" ]; then
     LIB_BASE="liblsecompat"
@@ -40,12 +44,18 @@ if [ "$OS_TYPE" = "SunOS" ]; then
             [ -f "$src" ] || { echo "Error: Missing source file $src"; exit 1; }
             obj=`basename "$src" .c`.o
             echo "Compiling $src ->$obj"
-            $CC $CFLAGS -c "$src" -o "$obj" || exit 1
+
+            # Apply snprintf definitions only when compiling snprintf_compat.c
+            FILE_CFLAGS=""
+            if [ "$src" = "snprintf_compat.c" ]; then
+                FILE_CFLAGS="$SNPRINTF_DEFS"
+            fi
+            echo "$CC $CFLAGS$FILE_CFLAGS -c $src -o $obj"
+            $CC $CFLAGS$FILE_CFLAGS -c "$src" -o "$obj" || exit 1
         done
 
         echo "=== Creating $LIB_A ==="
         rm -f "$LIB_A"
-        #ar rcs "$LIB_A" *.o
         ar cr "$LIB_A" *.o
 
         echo "Indexing $LIB_BASE with ranlib..."
@@ -56,7 +66,6 @@ if [ "$OS_TYPE" = "SunOS" ]; then
     fi
 fi
 
-exit
 # Solaris 2.x / SVR4 Build Path (Builds both .a and .so)
 echo "Building Static and Shared Libraries for Solaris 2.x (ELF)..."
 CFLAGS="$CFLAGS -fPIC -fno-exceptions -fno-unwind-tables"
@@ -70,7 +79,14 @@ for src in $SRC_FILES; do
     [ -f "$src" ] || { echo "Error: Missing source file $src"; exit 1; }
     obj=`basename "$src" .c`.o
     echo "Compiling $src ->$obj"
-    $CC $CFLAGS -c "$src" -o "$obj" || exit 1
+
+    # Apply snprintf definitions only when compiling snprintf_compat.c
+    FILE_CFLAGS=""
+    if [ "$src" = "snprintf_compat.c" ]; then
+        FILE_CFLAGS="$SNPRINTF_DEFS"
+    fi
+
+    $CC $CFLAGS$FILE_CFLAGS -c "$src" -o "$obj" || exit 1
 done
 
 echo ""
@@ -78,7 +94,6 @@ echo "=== Packaging $LIB_BASE and$LIB_SO ==="
 ar rcs "$LIB_A" *.o
 
 # Shared library link step (injects -lsocket -lnsl only for liblsenet)
-$CC -shared -static-libgcc  -Wl,-z,text -o "$LIB_SO" *.o $EXTRA_LIBS || exit 1
+$CC -shared -static-libgcc -Wl,-z,text -o "$LIB_SO" *.o $EXTRA_LIBS || exit 1
 
-#echo "Successfully built both $LIB_A and $LIB_SO for$LIB_BASE"
 echo "Successfully built both $LIB_A and $LIB_SO for$LIB_BASE"

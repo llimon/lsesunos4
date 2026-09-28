@@ -1,7 +1,7 @@
 #!/bin/sh
 
-app=grep
-release=2.5.4
+app=pcre
+release=8.37
 
 . /home/luis/source/build.functions.sh
 
@@ -14,17 +14,11 @@ clean() {
 }
 
 build() {
-#    generic_build
-     cd "${builddir}/${app}-${release}"
-     ./configure --prefix=/usr/local \
-            --disable-nls \
-            --disable-perl-regexp
-     make
+    generic_build
 }
 
 install() {
     clean_stage
-    mkdir -p ${builddir}${prefix}/bin
     generic_install
 }
 

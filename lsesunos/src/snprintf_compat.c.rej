@@ -1,0 +1,43 @@
+***************
+*** 370,388 ****
+            if (!length_modifier) { }
+            else if (length_modifier=='2') { f[f_l++] = 'l'; f[f_l++] = 'l'; }
+            else f[f_l++] = length_modifier;
+            f[f_l++] = fmt_spec; f[f_l++] = '\0';
+-           if (fmt_spec == 'p') str_arg_l += sprintf(tmp+str_arg_l, f, ptr_arg);
+            else if (fmt_spec == 'd') {
+              switch (length_modifier) {
+              case '\0':
+-             case 'h': str_arg_l+=sprintf(tmp+str_arg_l, f, int_arg);  break;
+-             case 'l': str_arg_l+=sprintf(tmp+str_arg_l, f, long_arg); break;
+  #ifdef SNPRINTF_LONGLONG_SUPPORT
+-             case '2': str_arg_l+=sprintf(tmp+str_arg_l, f, long_long_arg); break;
+  #endif
+              }
+            } else {
+              switch (length_modifier) {
+              case '\0':
+-             case 'h': str_arg_l+=sprintf(tmp+str_arg_l, f, uint_arg);  break;
+-             case 'l': str_arg_l+=sprintf(tmp+str_arg_l, f, ulong_arg); break;
+--- 370,390 ----
+            if (!length_modifier) { }
+            else if (length_modifier=='2') { f[f_l++] = 'l'; f[f_l++] = 'l'; }
+            else f[f_l++] = length_modifier;
+            f[f_l++] = fmt_spec; f[f_l++] = '\0';
++           
++           /* SunOS 4 BSD sprintf returns char*, not int. Use strlen wrapper. */
++           size_t before_len = str_arg_l;
++           if (fmt_spec == 'p') sprintf(tmp+str_arg_l, f, ptr_arg);
+            else if (fmt_spec == 'd') {
+              switch (length_modifier) {
+              case '\0':
++             case 'h': sprintf(tmp+str_arg_l, f, int_arg);  break;
++             case 'l': sprintf(tmp+str_arg_l, f, long_arg); break;
+  #ifdef SNPRINTF_LONGLONG_SUPPORT
++             case '2': sprintf(tmp+str_arg_l, f, long_long_arg); break;
+  #endif
+              }
+            } else {
+              switch (length_modifier) {
+              case '\0':
++             case 'h': sprintf(tmp+str_arg_l, f, uint_arg);  break;

@@ -4,7 +4,6 @@
  * It may be used for any purpose as long as this notice remains intact
  * on all source code distributions
  */
-#define SNPRINTF_CONST const
 
 /**************************************************************
  * Original:
@@ -93,6 +92,7 @@
  *
  **************************************************************/
 
+#include "includes.h"
 
 #if defined(BROKEN_SNPRINTF)		/* For those with broken snprintf() */
 # undef HAVE_SNPRINTF

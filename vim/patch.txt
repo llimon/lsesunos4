@@ -1,0 +1,3 @@
+replace this file is broken in distro:
+
+/usr/local/lse/share/vim/vim64/plugin/explorer.vim

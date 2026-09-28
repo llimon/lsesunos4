@@ -62,7 +62,7 @@ export C_INCLUDE_PATH
 | Package | Version | Binary / Library Output | Status / Role |
 | :--- | :--- | :--- | :--- |
 | **Midnight Commander** | `4.1.40` | `/usr/local/lse/bin/mc` | **Completed.** Built with S-Lang/curses and `liblsecompat`. |
-| **Vim** | `6.4` | `/usr/local/lse/bin/vim` | **Completed.** Terminal text editor. |
+| **Vim** | `6.4` | `/usr/local/lse/bin/vim` | **Completed.** Terminal text editor. Support for Block editing |
 | **GNU Screen** | `3.9.4` | `/usr/local/lse/bin/screen` | **Completed.** Terminal multiplexer. |
 | **ncurses / S-Lang** | `5.2` / `1.4.x` | `libncurses.a`, `libslang.a` | **Completed.** Terminal handling libraries. |
 | **less** | `381` | `/usr/local/lse/bin/less` | **Target.** Enhanced file pager replacing SunOS `more`. |
@@ -80,7 +80,7 @@ export C_INCLUDE_PATH
 | **GNU findutils** | `4.1` | `find`, `xargs` | **Completed.** Directory searching utilities. |
 | **GNU sed** | `3.02` | `/usr/local/lse/bin/sed` | **Target.** Stream editor with larger buffer limits than native `sed`. |
 | **GNU gawk** | `3.0.6` | `/usr/local/lse/bin/gawk` | **Target.** POSIX `awk` replacing original SunOS `oawk`. |
-| **GNU sed** | `---` | `/usr/local/lse/bin/sed` | **TODO. |
+| **GNU grep** | `5.4.1| `/usr/local/lse/bin/grep` | **Completed.** | Support for -R recursive |
 | **GNU diffutils** | `2.7` | `diff`, `cmp`, `sdiff` | **Target.** Context/unified diff generation tool. |
 | **bzip2** | `1.0.2` | `/usr/local/lse/bin/bzip2` | **Target.** `.bz2` archive decompression support. |
 | **popt** | `1.7` | `libpopt.a` | **Target.** Command-line option parsing library (for `logrotate`). |

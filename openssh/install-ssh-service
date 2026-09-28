@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Ensure we are running as root (UID 0)
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This script must be run as root." >&2
+    exit 1
+fi
+
+RC_LOCAL="/etc/rc.local"
+SSH_START_CMD="/usr/local/lse/sbin/sshd"
+
+# Check if rc.local exists, create if missing
+if [ ! -f "$RC_LOCAL" ]; then
+    echo "Creating $RC_LOCAL..."
+    echo "#!/bin/sh" > "$RC_LOCAL"
+    chmod 755 "$RC_LOCAL"
+fi
+
+# Check if the sshd command is already in rc.local
+if grep -q "sshd" "$RC_LOCAL"; then
+    echo "Notice: sshd startup command already exists in $RC_LOCAL."
+else
+    echo "Adding sshd startup command to $RC_LOCAL..."
+    echo "" >> "$RC_LOCAL"
+    echo "# Start OpenSSH daemon" >> "$RC_LOCAL"
+    echo "if [ -x $SSH_START_CMD ]; then" >> "$RC_LOCAL"
+    echo "    $SSH_START_CMD && echo ' - sshd started'" >> "$RC_LOCAL"
+    echo "fi" >> "$RC_LOCAL"
+    echo "Successfully updated $RC_LOCAL."
+fi

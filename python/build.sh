@@ -1,7 +1,7 @@
 #!/bin/sh
 
 app=Python
-release=1.5.2
+release=2.3.7
 
 . /home/luis/source/build.functions.sh
 
@@ -14,12 +14,15 @@ clean() {
 }
 
 build() {
-    #export LDFLAGS="-L/usr/local/lse/lib -llsesunoscompat"
-    export LDFLAGS="-L/usr/local/lse/lib"
+    export LDFLAGS="-L/usr/local/lse/lib -llsecompat"
+    export CPPFLAGS="-include $prefix/include/lse/lsecompat.h"
+    #export LDFLAGS="-L/usr/local/lse/lib"
     cd ${builddir}/${app}-${release} || exit 1
+    #gsed -i |Sun/4*||g configure
     ./configure
 
-    #make CPPFLAGS="-O2 -include /usr/local/lse/include/lse/sunos_compat.h"
+    #make CPPFLAGS="-O2"
+    #make CPPFLAGS="-O2 "
     make 
 }
 

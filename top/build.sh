@@ -21,8 +21,13 @@ build() {
 }
 
 install() {
+    PATH=/etc:/usr/etc:$PATH
+    export PATH
     clean_stage
-    generic_install
+    cd ${builddir}/${app}-${release} || exit 1
+    mkdir -p ${stagedir}${prefix}/bin ${stagedir}${prefix}/man
+    make BINDIR="${stagedir}${prefix}/bin" MANDIR="${stagedir}${prefix}/man" install
+    #generic_install
 }
 
 pack() {

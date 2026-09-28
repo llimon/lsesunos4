@@ -22,10 +22,22 @@ build() {
 
 install() {
     clean_stage
-    #generic_install
-    ( date; w; netstat -s; vmstat; ps -ax; iostat; last | who |ps -e ) |   dd of=/var/run/prngd-seed bs=1024 count=2 2>/dev/null
-    #cp /opt/build/prngd-0.9.29/contrib/SunOS-4/prngd.conf.sunos4 /usr/local/lse/etc/prngd.conf
-    #sudo /opt/build/prngd-0.9.29/prngd -f -d -c /usr/local/lse/etc/prngd.conf --seedfile /var/run/prngd-seed /dev/egd-pool
+    #( date; w; netstat -s; vmstat; ps -ax; iostat; last | who |ps -e ) |   dd of=/var/run/prngd-seed bs=1024 count=2 2>/dev/null
+   mkdir -p ${stagedir}${prefix}/installers || exit 0
+   mkdir -p ${stagedir}${prefix}/etc || exit 0
+   mkdir -p ${stagedir}${prefix}/sbin || exit 0
+   mkdir -p ${stagedir}${prefix}/share/man/man8 || exit 0
+   
+   cp ${builddir}/${app}-${release}/prngd ${stagedir}${prefix}/sbin/prngd
+   cp start-prngd ${stagedir}${prefix}/sbin/start-prngd
+   chmod 755 ${stagedir}${prefix}/sbin/start-prngd
+   chmod 755 ${stagedir}${prefix}/sbin/prngd
+  
+   cp ${builddir}/${app}-${release}/prngd.man ${stagedir}${prefix}/share/man/man8/prngd.8
+
+   cp ${builddir}/${app}-${release}/contrib/SunOS-4/prngd.conf.sunos4 ${stagedir}${prefix}/etc/prngd.conf
+   cp install-prngd-service ${stagedir}${prefix}/installers/install-prngd-service
+   chmod 755 ${stagedir}${prefix}/installers/install-prngd-service
 }
 
 pack() {

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+PRNGD_BIN="/usr/local/lse/sbin/prngd"
+CONF_FILE="/usr/local/lse/etc/prngd.conf"
+SOCKET="/dev/egd-pool"
+
+# Check if prngd is already running in memory
+ps -ax | /usr/bin/grep "\/[p]rngd" >/dev/null 2>&1 && {
+    echo "prngd is already running."
+    exit 0
+}
+
+# Clean up stale socket only if verified dead
+if [ -S "$SOCKET" ]; then
+    echo "Removing stale prngd socket..."
+    rm -f "$SOCKET"
+fi
+
+# Launch prngd
+if [ -x "$PRNGD_BIN" ]; then
+    echo "Starting prngd..."
+    $PRNGD_BIN  -c "$CONF_FILE" $SOCKET
+else
+    echo "Error: prngd binary not found or not executable at $PRNGD_BIN" >&2
+    exit 1
+fi

@@ -13,6 +13,7 @@
 #    pragma weak atexit
 #    pragma weak strsep
 #    pragma weak strtoul
+#    pragma weak strtol
 #    pragma weak setlocale
 #  elif defined(__aout__) || defined(sun) || defined(__sunos__)
      /* SunOS 4 / a.out systems: Standard declarations without weak attributes */
@@ -20,6 +21,7 @@
      double         difftime(time_t time1, time_t time0);
      int            atexit(void (*func)(void));
      char          *strsep(char **stringp, const char *delim);
+     long          strtol(const char *nptr, char **endptr, int base);
      unsigned long  strtoul(const char *nptr, char **endptr, int base);
      char          *setlocale(int category, const char *locale);
 #  else
@@ -28,6 +30,7 @@
      double         difftime(time_t time1, time_t time0)              __attribute__((weak));
      int            atexit(void (*func)(void))                         __attribute__((weak));
      char          *strsep(char **stringp, const char *delim)         __attribute__((weak));
+     long           strtol(const char *nptr, char **endptr, int base) __attribute__((weak));
      unsigned long  strtoul(const char *nptr, char **endptr, int base) __attribute__((weak));
      char          *setlocale(int category, const char *locale)        __attribute__((weak));
 #  endif
@@ -74,67 +77,64 @@ char *strsep(char **stringp, const char *delim)
     return begin;
 }
 
-unsigned long strtoul(const char *nptr, char **endptr, int base)
+long strtol(const char *nptr, char **endptr, int base)
 {
     const char *s = nptr;
-    unsigned long acc = 0;
+    long acc = 0;
+    int neg = 0;
+    int digit = -1;
     int c;
-    unsigned long cutoff;
-    int neg = 0, any = 0, cutlim;
+    const char *start_digits;
 
-    /* Skip white space */
-    do {
-        c = *s++;
-    } while (isspace((unsigned char)c));
+    while (isspace((unsigned char)*s))
+        s++;
 
-    if (c == '-') {
+    if (*s == '-') {
         neg = 1;
-        c = *s++;
-    } else if (c == '+') {
-        c = *s++;
+        s++;
+    } else if (*s == '+') {
+        s++;
     }
 
-    if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X')) {
-        c = s[1];
+    if ((base == 0 || base == 16) && *s == '0' && (s[1] == 'x' || s[1] == 'X')) {
         s += 2;
         base = 16;
+    } else if (base == 0) {
+        base = (*s == '0') ? 8 : 10;
     }
-    if (base == 0)
-        base = (c == '0') ? 8 : 10;
 
-    cutoff = ULONG_MAX / (unsigned long)base;
-    cutlim = (int)(ULONG_MAX % (unsigned long)base);
+    start_digits = s;
+    while (*s != '\0') {
+        c = (unsigned char)*s;
+        digit = -1;
 
-    for (;; c = *s++) {
-        if (isdigit((unsigned char)c))
-            c -= '0';
-        else if (isalpha((unsigned char)c))
-            c -= isupper((unsigned char)c) ? 'A' - 10 : 'a' - 10;
-        else
-            break;
-
-        if (c >= base)
-            break;
-
-        if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim)) {
-            any = -1;
+        if (isdigit(c)) {
+            digit = c - '0';
+        } else if (isalpha(c)) {
+            digit = tolower(c) - 'a' + 10;
         } else {
-            any = 1;
-            acc *= (unsigned long)base;
-            acc += (unsigned long)c;
+            break;
         }
+
+        if (digit >= base)
+            break;
+
+        acc = acc * base + digit;
+        s++;
     }
 
-    if (any < 0) {
-        acc = ULONG_MAX;
-    } else if (neg) {
+    if (neg)
         acc = -acc;
-    }
 
     if (endptr != NULL)
-        *endptr = (char *)(any ? s - 1 : nptr);
+        *endptr = (char *)(s == start_digits ? nptr : s);
 
     return acc;
+}
+
+unsigned long strtoul(const char *nptr, char **endptr, int base)
+{
+    return (unsigned long)strtol(nptr, endptr, base);
 }
 
 /* setlocale dummy shim for SunOS 4 */
