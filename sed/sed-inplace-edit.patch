@@ -1,3 +1,12 @@
+diff -ruN sed-3.02/AUTHORS sed-3.02-change-in-place/AUTHORS
+--- sed-3.02/AUTHORS	Tue Jul 21 04:58:12 1998
++++ sed-3.02-change-in-place/AUTHORS	Mon Sep 28 10:39:31 1998
+@@ -2,3 +2,5 @@
+ and later modified by Tom Lord (lord@gnu.org).
+ 
+ It is currently being maintained by Ken Pizzini (ken@gnu.org).
++
++Inplace editing backported by Luis Enrique Limon (9660709+llimon@users.noreply.github.com).
 diff -ruN sed-3.02/sed/execute.c sed-3.02-change-in-place/sed/execute.c
 --- sed-3.02/sed/execute.c	Sun Jul  5 21:01:01 1998
 +++ sed-3.02-change-in-place/sed/execute.c	Mon Sep 28 09:51:07 1998
@@ -288,3 +297,14 @@ diff -ruN sed-3.02/tests/test-sed-i-inplace-edit.sh sed-3.02-change-in-place/tes
 +#rm -rf "$TEST_DIR"
 +echo ""
 +echo "=== Test Complete & Cleaned Up ==="
+diff -ruN sed-3.02/testsuite/help.good sed-3.02-change-in-place/testsuite/help.good
+--- sed-3.02/testsuite/help.good	Mon Jun  1 19:26:56 1998
++++ sed-3.02-change-in-place/testsuite/help.good	Mon Sep 28 10:37:42 1998
+@@ -1,5 +1,7 @@
+ Usage: sed [OPTION]... {script-only-if-no-other-script} [input-file]...
+ 
++  -i[SUFFIX], --in-place[=SUFFIX]
++                 edit files in place (makes backup if SUFFIX supplied)
+   -n, --quiet, --silent
+                  suppress automatic printing of pattern space
+   -e script, --expression=script
