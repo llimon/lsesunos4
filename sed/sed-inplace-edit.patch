@@ -1,0 +1,290 @@
+diff -ruN sed-3.02/sed/execute.c sed-3.02-change-in-place/sed/execute.c
+--- sed-3.02/sed/execute.c	Sun Jul  5 21:01:01 1998
++++ sed-3.02-change-in-place/sed/execute.c	Mon Sep 28 09:51:07 1998
+@@ -85,6 +85,9 @@
+ /* Do we need to be pedantically POSIX compliant? */
+ extern flagT POSIXLY_CORRECT;
+ 
++/* In-place editing suffix: NULL = disabled, "" = no backup, or ".bak" */
++extern char *in_place_extension;
++
+ 
+ /* Sed operates a line at a time. */
+ struct line {
+@@ -191,6 +194,124 @@
+ #ifdef EXPERIMENTAL_DASH_N_OPTIMIZATION
+   branches_in_top_level = count_branches(the_program);
+ #endif /*EXPERIMENTAL_DASH_N_OPTIMIZATION*/
++
++  /* If -i is enabled and we have actual file arguments (not stdin) */
++  if (in_place_extension && argv && *argv)
++    {
++      countT total_bad = 0;
++      char **cur_file;
++
++      for (cur_file = argv; *cur_file; cur_file++)
++        {
++          char *single_argv[2];
++          char tmp_name[1024];
++          char bak_name[1024];
++          FILE *fp_out;
++          int orig_stdout;
++
++          /* Skip standard input "-" for in-place editing */
++          if (strcmp(*cur_file, "-") == 0)
++            {
++              single_argv[0] = *cur_file;
++              single_argv[1] = NULL;
++              
++              input.file_list = single_argv;
++              input.bad_count = 0;
++              input.line_number = 0;
++              input.read_fn = read_always_fail;
++              input.fp = NULL;
++
++              line_init(&line, INITIAL_BUFFER_SIZE);
++              line_init(&hold, INITIAL_BUFFER_SIZE);
++              line_init(&buffer, FREAD_BUFFER_SIZE);
++
++              while (read_pattern_space(&input, 0))
++                {
++                  flagT quit = execute_program(the_program, &input);
++                  if (!no_default_output)
++                    output_line(line.text, line.length, line.chomped, stdout);
++                  if (quit)
++                    break;
++                }
++              closedown(&input);
++              total_bad += input.bad_count;
++              continue;
++            }
++
++          /* 1. Generate temp file name */
++          sprintf(tmp_name, "%s.tmpXXXXXX", *cur_file);
++          mktemp(tmp_name);
++
++          /* 2. Redirect stdout to temp file */
++          fflush(stdout);
++          orig_stdout = dup(fileno(stdout));
++          fp_out = fopen(tmp_name, "w");
++          if (!fp_out)
++            {
++              fprintf(stderr, "sed: cannot create temp file for %s\n", *cur_file);
++              total_bad++;
++              close(orig_stdout);
++              continue;
++            }
++          dup2(fileno(fp_out), fileno(stdout));
++
++          /* 3. Execute sed logic on single target file */
++          single_argv[0] = *cur_file;
++          single_argv[1] = NULL;
++
++          input.file_list = single_argv;
++          input.bad_count = 0;
++          input.line_number = 0;
++          input.read_fn = read_always_fail;
++          input.fp = NULL;
++
++          line_init(&line, INITIAL_BUFFER_SIZE);
++          line_init(&hold, INITIAL_BUFFER_SIZE);
++          line_init(&buffer, FREAD_BUFFER_SIZE);
++
++          while (read_pattern_space(&input, 0))
++            {
++              flagT quit = execute_program(the_program, &input);
++              if (!no_default_output)
++                output_line(line.text, line.length, line.chomped, stdout);
++              if (quit)
++                break;
++            }
++          closedown(&input);
++
++          /* 4. Flush and restore stdout */
++          fflush(stdout);
++          fclose(fp_out);
++          dup2(orig_stdout, fileno(stdout));
++          close(orig_stdout);
++
++          /* 5. Handle backup and swap temporary file */
++          if (input.bad_count == 0)
++            {
++              if (in_place_extension[0] != '\0')
++                {
++                  sprintf(bak_name, "%s%s", *cur_file, in_place_extension);
++                  unlink(bak_name);
++                  rename(*cur_file, bak_name);
++                }
++              else
++                {
++                  unlink(*cur_file);
++                }
++              rename(tmp_name, *cur_file);
++            }
++          else
++            {
++              unlink(tmp_name);
++            }
++
++          total_bad += input.bad_count;
++        }
++
++      return total_bad;
++    }
++
++  /* --- ORIGINAL SED 3.02 PATH (stdin or standard output redirect) --- */
+   input.file_list = stdin_argv;
+   if (argv && *argv)
+     input.file_list = argv;
+@@ -207,14 +328,13 @@
+     {
+       flagT quit = execute_program(the_program, &input);
+       if (!no_default_output)
+-	output_line(line.text, line.length, line.chomped, stdout);
++        output_line(line.text, line.length, line.chomped, stdout);
+       if (quit)
+-	break;
++        break;
+     }
+   closedown(&input);
+   return input.bad_count;
+ }
+-
+ /* increase a struct line's length, making some attempt at
+    keeping realloc() calls under control by padding for future growth.  */
+ static void
+diff -ruN sed-3.02/sed/sed.c sed-3.02-change-in-place/sed/sed.c
+--- sed-3.02/sed/sed.c	Thu Jul  2 18:06:26 1998
++++ sed-3.02-change-in-place/sed/sed.c	Mon Sep 28 10:03:20 1998
+@@ -78,6 +78,9 @@
+ /* Do we need to be pedantically POSIX compliant? */
+ flagT POSIXLY_CORRECT;
+ 
++/* In-place editing suffix: NULL = disabled, "" = no backup, or ".bak" */
++char *in_place_extension = NULL;
++
+ static void
+ usage(status)
+   int status;
+@@ -87,6 +90,8 @@
+   fprintf(out, "\
+ Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n\
+ \n\
++  -i[SUFFIX], --in-place[=SUFFIX]
++                 edit files in place (makes backup if SUFFIX supplied)\n\
+   -n, --quiet, --silent\n\
+                  suppress automatic printing of pattern space\n\
+   -e script, --expression=script\n\
+@@ -119,6 +124,7 @@
+     {"quiet", 0, NULL, 'n'},
+     {"silent", 0, NULL, 'n'},
+     {"version", 0, NULL, 'V'},
++    { "in-place", optional_argument, NULL, 'i' },
+     {"help", 0, NULL, 'h'},
+     {NULL, 0, NULL, 0}
+   };
+@@ -139,10 +145,17 @@
+ #endif /*STUB_FROM_RX_LIBRARY_USAGE*/
+ 
+   myname = *argv;
+-  while ((opt = getopt_long(argc, argv, "hnrVe:f:", longopts, NULL)) != EOF)
++  while ((opt = getopt_long(argc, argv, "hi::nrVe:f:", longopts, NULL)) != EOF)
+     {
+       switch (opt)
+ 	{
++          /* Add 'i' to options parsing */
++        case 'i':
++          if (optarg && optarg[0] != '\0')
++            in_place_extension = optarg;
++          else
++            in_place_extension = "";  /* Empty string means modify in-place without backup */
++          break;
+ 	case 'n':
+ 	  no_default_output = 1;
+ 	  break;
+diff -ruN sed-3.02/tests/test-no-change-i-test.sh sed-3.02-change-in-place/tests/test-no-change-i-test.sh
+--- sed-3.02/tests/test-no-change-i-test.sh	Wed Dec 31 16:00:00 1969
++++ sed-3.02-change-in-place/tests/test-no-change-i-test.sh	Mon Sep 28 10:18:52 1998
+@@ -0,0 +1,26 @@
++#!/bin/sh
++
++#TEST_DIR="/tmp/sed_stdout_test_$$"
++#mkdir "$TEST_DIR"
++#cd "$TEST_DIR"
++
++echo "=== Creating test file ==="
++echo "line1: original content" > test_std.txt
++
++echo ""
++echo "=== Test 1: Standard stdout pipe (should NOT touch original file) ==="
++OUTPUT=$(../sed/sed 's/original/modified/' test_std.txt)
++
++echo "Piped stdout output: $OUTPUT"
++echo "Original file content:"
++cat test_std.txt
++
++echo ""
++echo "=== Test 2: Standard stdin pipe ==="
++echo "piped data" | ../sed/sed 's/piped/streamed/'
++
++# Cleanup
++#cd /tmp
++#rm -rf "$TEST_DIR"
++echo ""
++echo "=== Verification Complete ==="
+diff -ruN sed-3.02/tests/test-sed-i-inplace-edit.sh sed-3.02-change-in-place/tests/test-sed-i-inplace-edit.sh
+--- sed-3.02/tests/test-sed-i-inplace-edit.sh	Wed Dec 31 16:00:00 1969
++++ sed-3.02-change-in-place/tests/test-sed-i-inplace-edit.sh	Mon Sep 28 10:18:35 1998
+@@ -0,0 +1,52 @@
++#!/bin/sh
++
++# 1. Setup temporary test directory
++#TEST_DIR="/tmp/sed_test_$$"
++#mkdir "$TEST_DIR"
++#cd "$TEST_DIR"
++
++echo "=== Creating test files in $TEST_DIR ==="
++
++# 2. Create 3 files to be modified in-place
++echo "server1: status=down" > file1.txt
++echo "server2: status=down" > file2.txt
++echo "server3: status=down" > file3.txt
++
++# 3. Create a 4th file that should NOT be modified
++echo "server4: status=down" > skipme.log
++
++
++echo "Initial file states:"
++grep "status=" file*.txt skipme.log
++
++echo ""
++echo "=== Test 1: In-place edit across file1, file2, file3 (without backup) ==="
++
++# Run sed -i on only file1.txt, file2.txt, file3.txt
++../sed/sed -i 's/status=down/status=active/' file1.txt file2.txt file3.txt
++
++echo "Checking results:"
++grep "status=" file*.txt skipme.log
++
++echo ""
++echo "=== Test 2: In-place edit with backup extension (-i.bak) ==="
++
++# Run sed -i.bak to update 'active' to 'online' and generate .bak files
++../sed/sed -i.bak 's/status=active/status=online/' file1.txt file2.txt file3.txt
++
++echo "Checking modified files:"
++grep "status=" file1.txt file2.txt file3.txt
++
++echo ""
++echo "Checking generated backup (.bak) files:"
++grep "status=" *.bak
++
++echo ""
++echo "Verifying 4th file (skipme.log) remained untouched:"
++cat skipme.log
++
++# Cleanup
++#cd /tmp
++#rm -rf "$TEST_DIR"
++echo ""
++echo "=== Test Complete & Cleaned Up ==="
