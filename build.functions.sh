@@ -98,6 +98,12 @@ generic_build(){
 generic_install(){
     local sub_dir="${1:-.}"
 
+    # Ensure we are running as root (UID 0)
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: This script must be run as root. To make sure artifacts are owned by root" >&2
+        exit 1
+    fi
+
     clean_stage
     echo "creating ${stagedir}${prefix}"
     mkdir -p ${stagedir}${prefix}

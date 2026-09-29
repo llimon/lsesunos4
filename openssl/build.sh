@@ -18,14 +18,18 @@ build() {
     #export CFLAGS="$CFLAGS "
     #export LDFLAGS="-L${PREFIX}/lib -llsecompat"
     cd ${builddir}/${app}-${release} || exit 1
-    ./Configure sunos-gcc \
+    ./Configure sunos-gcc -fPIC \
        --prefix="${prefix}" \
        -Dssize_t=int
-    make
+    #make
+    make CC="gcc" \
+     CFLAG="-O2 -fPIC -Dssize_t=int -I/usr/local/lse/include" \ 
+     LDFLAGS="-L/usr/local/lse/lib"
+ 
 }
 
 install() {
-    clean_stage
+    #clean_stage
 
     echo "creating ${stagedir}${prefix}"
     mkdir -p "${stagedir}${prefix}"
@@ -34,6 +38,12 @@ install() {
 
     # OpenSSL 0.9.6 uses INSTALL_PREFIX as the staging directory (DESTDIR equivalent)
     # and INSTALLTOP for the prefix directory path.
+#    make CC="gcc" \
+#     CFLAG="-O2 -fPIC -Dssize_t=int -I/usr/local/lse/include" \ 
+#     LDFLAGS="-L/usr/local/lse/lib" \
+#	install INSTALL_PREFIX="${stagedir}" INSTALLTOP="${prefix}" OPENSSLDIR="${prefix}/ssl"
+
+ 
     make install INSTALL_PREFIX="${stagedir}" INSTALLTOP="${prefix}" OPENSSLDIR="${prefix}/ssl"
 }
 
