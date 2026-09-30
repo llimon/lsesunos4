@@ -1,0 +1,40 @@
+diff -ruN top-3.5.1/.defaults top-3.5.1-fix/.defaults
+--- top-3.5.1/.defaults	Wed Dec 31 16:00:00 1969
++++ top-3.5.1-fix/.defaults	Mon Sep 28 08:57:21 2026
+@@ -0,0 +1,19 @@
++set module = 'sunos4'
++set LoadMax = '5.0'
++set topn = '15'
++set NominalTopn = '18'
++set delay = '5'
++set owner = 'root'
++set group = 'kmem'
++set mode = '2755'
++set random = '1'
++set TableSize = '29'
++set bindir = '/usr/local/lse/bin'
++set mandir = '/usr/local/lse/man/man1'
++set manext = '1'
++set mansty = 'man'
++set Cmdshell = '/bin/sh'
++set Cmdcc = 'gcc'
++set Cmdawk = 'awk'
++set Cmdinstall = './install'
++set cdefs = '-O2'
+diff -ruN top-3.5.1/machine/m_sunos4.c top-3.5.1-fix/machine/m_sunos4.c
+--- top-3.5.1/machine/m_sunos4.c	Mon Sep 28 08:58:36 2026
++++ top-3.5.1-fix/machine/m_sunos4.c	Mon Sep 28 08:52:07 2026
+@@ -144,9 +144,12 @@
+ /* the extra nulls in the string "run" are for adding a slash and
+    the processor number when needed */
+ 
++/* NEW (Writable character arrays): */
++static char state_run[8] = "run\0\0\0";
++
+ char *state_abbrev[] =
+ {
+-    "", "sleep", "WAIT", "run\0\0\0", "start", "zomb", "stop"
++    "", "sleep", "WAIT", state_run, "start", "zomb", "stop"
+ };
+ 
+ /* values that we stash away in _init and use in later routines */

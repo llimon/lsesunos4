@@ -11,32 +11,26 @@
 #  if defined(__ELF__) || defined(__solaris__) || defined(SOLARIS2)
      /* ELF systems: Use pragma weak */
 #    pragma weak memmove
-#    pragma weak difftime
 #    pragma weak atexit
 #    pragma weak strsep
 #    pragma weak strtoul
 #    pragma weak strtol
 #    pragma weak setlocale
-#    pragma weak strerror
 #  elif defined(__aout__) || defined(sun) || defined(__sunos__)
      /* SunOS 4 / a.out systems: Standard declarations without weak attributes */
      void          *memmove(void *dest, const void *src, size_t n);
-     double         difftime(time_t time1, time_t time0);
      int            atexit(void (*func)(void));
      char          *strsep(char **stringp, const char *delim);
      long          strtol(const char *nptr, char **endptr, int base);
      unsigned long  strtoul(const char *nptr, char **endptr, int base);
-     char          *strerror(int errnum);
      char          *setlocale(int category, const char *locale);
 #  else
      /* Fallback for other GCC platforms supporting weak attributes */
      void          *memmove(void *dest, const void *src, size_t n)     __attribute__((weak));
-     double         difftime(time_t time1, time_t time0)              __attribute__((weak));
      int            atexit(void (*func)(void))                         __attribute__((weak));
      char          *strsep(char **stringp, const char *delim)         __attribute__((weak));
      long           strtol(const char *nptr, char **endptr, int base) __attribute__((weak));
      unsigned long  strtoul(const char *nptr, char **endptr, int base) __attribute__((weak));
-     char          *strerror(int errnum)                               __attribute__((weak));
      char          *setlocale(int category, const char *locale)        __attribute__((weak));
 #  endif
 #endif
@@ -51,13 +45,6 @@ void *memmove(void *dest, const void *src, size_t n) {
         bcopy(src, dest, n);
     }
     return dest;
-}
-
-/* difftime shim for SunOS 4 */
-#include <time.h>
-
-double difftime(time_t time1, time_t time0) {
-    return (double)(time1 - time0);
 }
 
 /* atexit shim for SunOS 4 */
@@ -148,17 +135,6 @@ long strtol(const char *nptr, char **endptr, int base)
 unsigned long strtoul(const char *nptr, char **endptr, int base)
 {
     return (unsigned long)strtol(nptr, endptr, base);
-}
-
-char *strerror(int errnum) {
-    static char unknown_buf[32];
-
-    if (errnum >= 0 && errnum < sys_nerr) {
-        return sys_errlist[errnum];
-    }
-
-    sprintf(unknown_buf, "Unknown error %d", errnum);
-    return unknown_buf;
 }
 
 /* setlocale dummy shim for SunOS 4 */

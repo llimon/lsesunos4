@@ -3,6 +3,8 @@
 app=top
 release=3.5.1
 
+patches[0]=top-memory-corruption-fix.patch.gz
+
 . /home/luis/source/build.functions.sh
 
 prep() {
@@ -17,7 +19,8 @@ build() {
     #generic_build
     cd "${builddir}/${app}-${release}" || exit 1
     ./Configure sunos4
-    make LIBS="-L$prefix/lib -llsecompat -lkvm"
+    make LIBS="-L$prefix/lib -llsecompat -lkvm" \
+        CDEFS="-O2 -DMULTIPROCESSOR"
 }
 
 install() {

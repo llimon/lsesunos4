@@ -1,5 +1,8 @@
 #!/bin/sh
 
+PATH=/usr/etc:/usr/local/lse/bin:$PATH
+LD_LIBRARY_PATH=/usr/local/lse/lib:$LD_LIBRARY_PATH
+export PATH LD_LIBRARY_PATH
 . /home/luis/source/build.vars.sh
 
 
